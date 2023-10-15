@@ -44,35 +44,38 @@ public:
 
   counting_iterator& operator++() {
     assert(_count > 0);
-    return ++_base;
+    ++_base;
+    --_count;
+    return *this;
   }
 
   counting_iterator operator++(int) {
     assert(_count > 0);
-    return _base++;
+    return counting_iterator(_base++, --_count);
   }
 
   counting_iterator& operator--() {
-    return --_base;
+    --_base;
+    ++_count;
+    return *this;
   }
 
   counting_iterator operator--(int) {
-    _base--;
-    return *this;
+    return counting_iterator(_base--, ++_count);
   }
 
   counting_iterator operator+(std::ptrdiff_t n) const {
     assert(_count >= n);
-    return counting_iterator(_base + n);
+    return counting_iterator(_base + n, _count - n);
   }
 
   friend counting_iterator operator+(std::ptrdiff_t n, const counting_iterator& rhs) {
     assert(rhs._count >= n);
-    return counting_iterator(n + rhs._base);
+    return counting_iterator(n + rhs._base, rhs._count - n);
   }
 
   counting_iterator operator-(std::ptrdiff_t n) const {
-    return counting_iterator(_base - n);
+    return counting_iterator(_base - n, _count + n);
   }
 
   friend decltype(auto) operator-(const counting_iterator& lhs, const counting_iterator& rhs) {
@@ -82,11 +85,13 @@ public:
   counting_iterator& operator+=(std::ptrdiff_t n) {
     assert(_count >= n);
     _base += n;
+    _count -= n;
     return *this;
   }
 
   counting_iterator& operator-=(std::ptrdiff_t n) {
     _base -= n;
+    _count += n;
     return *this;
   }
 
