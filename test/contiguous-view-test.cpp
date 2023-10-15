@@ -329,26 +329,6 @@ TYPED_TEST(common_tests, as_bytes) {
     auto ints = make_array<std::uint32_t>(0x11223344, 0xABABCDEF);
     auto bytes = make_array<std::byte>(0x44, 0x33, 0x22, 0x11, 0xEF, 0xCD, 0xAB, 0xAB);
 
-    typename TestFixture::template view<const std::uint32_t, 2> ints_view(ints.begin(), ints.end());
-    typename TestFixture::template view<std::byte, 8> bytes_view(bytes.begin(), bytes.end());
-
-    typename TestFixture::template view<const std::byte, 8> as_bytes = ints_view.as_bytes();
-
-    EXPECT_EQ(8, ints_view.size_bytes());
-    EXPECT_EQ(8, as_bytes.size());
-    EXPECT_EQ(8, as_bytes.size_bytes());
-
-    expect_eq(bytes_view, as_bytes);
-  }
-}
-
-TYPED_TEST(common_tests, as_bytes_const) {
-  if constexpr (std::endian::native != std::endian::little) {
-    GTEST_SKIP();
-  } else {
-    auto ints = make_array<std::uint32_t>(0x11223344, 0xABABCDEF);
-    auto bytes = make_array<std::byte>(0x44, 0x33, 0x22, 0x11, 0xEF, 0xCD, 0xAB, 0xAB);
-
     typename TestFixture::template view<std::uint32_t, 2> ints_view(ints.begin(), ints.end());
     typename TestFixture::template view<std::byte, 8> bytes_view(bytes.begin(), bytes.end());
 
@@ -364,6 +344,26 @@ TYPED_TEST(common_tests, as_bytes_const) {
     as_bytes[4] = std::byte(0x42);
 
     expect_eq<std::uint32_t>({0x80223344, 0xABABCD42}, ints_view);
+  }
+}
+
+TYPED_TEST(common_tests, as_bytes_const) {
+  if constexpr (std::endian::native != std::endian::little) {
+    GTEST_SKIP();
+  } else {
+    auto ints = make_array<std::uint32_t>(0x11223344, 0xABABCDEF);
+    auto bytes = make_array<std::byte>(0x44, 0x33, 0x22, 0x11, 0xEF, 0xCD, 0xAB, 0xAB);
+
+    typename TestFixture::template view<const std::uint32_t, 2> ints_view(ints.begin(), ints.end());
+    typename TestFixture::template view<std::byte, 8> bytes_view(bytes.begin(), bytes.end());
+
+    typename TestFixture::template view<const std::byte, 8> as_bytes = ints_view.as_bytes();
+
+    EXPECT_EQ(8, ints_view.size_bytes());
+    EXPECT_EQ(8, as_bytes.size());
+    EXPECT_EQ(8, as_bytes.size_bytes());
+
+    expect_eq(bytes_view, as_bytes);
   }
 }
 
