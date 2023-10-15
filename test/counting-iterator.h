@@ -1,7 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
+#include <iterator>
 #include <memory>
+#include <type_traits>
 
 template <typename It, typename = void>
 class counting_iterator_base {};
