@@ -72,7 +72,7 @@ public:
     return counting_iterator(_base - n);
   }
 
-  friend decltype(auto) operator-(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator-(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base - rhs._base;
   }
 
@@ -87,27 +87,27 @@ public:
     return *this;
   }
 
-  friend decltype(auto) operator==(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator==(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base == rhs._base;
   }
 
-  friend decltype(auto) operator!=(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator!=(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base != rhs._base;
   }
 
-  friend decltype(auto) operator<(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator<(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base < rhs._base;
   }
 
-  friend decltype(auto) operator<=(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator<=(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base <= rhs._base;
   }
 
-  friend decltype(auto) operator>(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator>(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base > rhs._base;
   }
 
-  friend decltype(auto) operator>=(const counting_iterator & lhs, const counting_iterator & rhs) {
+  friend decltype(auto) operator>=(const counting_iterator& lhs, const counting_iterator& rhs) {
     return lhs._base >= rhs._base;
   }
 
