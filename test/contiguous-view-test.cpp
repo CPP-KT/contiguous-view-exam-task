@@ -1,5 +1,7 @@
 #include "contiguous-view.h"
 
+#include "counting-iterator.h"
+
 #include <gtest/gtest.h>
 
 #include <array>
@@ -39,7 +41,8 @@ std::array<T, sizeof...(Ts)> make_array(Ts... values) {
 
 template <typename It>
 auto obfuscate_iterators(It first, It last) {
-  return std::make_pair(std::counted_iterator(first, last - first), std::counted_iterator(last, 0));
+  // TODO replace with std::counting_iterator
+  return std::make_pair(counting_iterator(first, last - first), counting_iterator(last, 0));
 }
 
 std::ostream& operator<<(std::ostream& out, std::byte b) {
