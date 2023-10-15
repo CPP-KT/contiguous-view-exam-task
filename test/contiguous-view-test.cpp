@@ -137,6 +137,19 @@ TYPED_TEST(common_tests, two_iterators_ctor) {
   expect_eq({10, 20, 30}, v);
 }
 
+TYPED_TEST(common_tests, two_iterators_ctor_empty) {
+  auto c = make_array();
+  auto [first, last] = obfuscate_iterators(c.begin(), c.end());
+  typename TestFixture::template view<element, 0> v(first, last);
+
+  EXPECT_EQ(c.data(), v.data());
+  EXPECT_EQ(0, v.size());
+  EXPECT_EQ(0, v.size_bytes());
+  EXPECT_TRUE(v.empty());
+
+  expect_eq({}, v);
+}
+
 TYPED_TEST(common_tests, iterator_and_count_ctor) {
   auto c = make_array(10, 20, 30);
   auto [first, last] = obfuscate_iterators(c.begin(), c.end());
@@ -149,6 +162,19 @@ TYPED_TEST(common_tests, iterator_and_count_ctor) {
   EXPECT_FALSE(v.empty());
 
   expect_eq({10, 20, 30}, v);
+}
+
+TYPED_TEST(common_tests, iterator_and_count_ctor_empty) {
+  auto c = make_array();
+  auto [first, last] = obfuscate_iterators(c.begin(), c.end());
+  typename TestFixture::template view<element, 0> v(first, last);
+
+  EXPECT_EQ(c.data(), v.data());
+  EXPECT_EQ(0, v.size());
+  EXPECT_EQ(0, v.size_bytes());
+  EXPECT_TRUE(v.empty());
+
+  expect_eq({}, v);
 }
 
 TYPED_TEST(common_tests, copy_ctor) {
@@ -382,32 +408,6 @@ TEST(dynamic_extent_tests, default_ctor) {
   contiguous_view<element> v;
 
   EXPECT_EQ(nullptr, v.data());
-  EXPECT_EQ(0, v.size());
-  EXPECT_EQ(0, v.size_bytes());
-  EXPECT_TRUE(v.empty());
-
-  expect_eq({}, v);
-}
-
-TEST(dynamic_extent_tests, two_iterators_ctor_empty) {
-  auto c = make_array();
-  auto [first, last] = obfuscate_iterators(c.begin(), c.end());
-  contiguous_view<element> v(first, last);
-
-  EXPECT_EQ(c.data(), v.data());
-  EXPECT_EQ(0, v.size());
-  EXPECT_EQ(0, v.size_bytes());
-  EXPECT_TRUE(v.empty());
-
-  expect_eq({}, v);
-}
-
-TEST(dynamic_extent_tests, iterator_and_count_ctor_empty) {
-  auto c = make_array();
-  auto [first, last] = obfuscate_iterators(c.begin(), c.end());
-  contiguous_view<element> v(first, last);
-
-  EXPECT_EQ(c.data(), v.data());
   EXPECT_EQ(0, v.size());
   EXPECT_EQ(0, v.size_bytes());
   EXPECT_TRUE(v.empty());
