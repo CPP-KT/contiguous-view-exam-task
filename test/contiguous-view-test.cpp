@@ -170,7 +170,8 @@ TYPED_TEST(common_tests, iterator_and_count_ctor) {
 TYPED_TEST(common_tests, iterator_and_count_ctor_empty) {
   auto c = make_array();
   auto [first, last] = obfuscate_iterators(c.begin(), c.end());
-  typename TestFixture::template view<element, 0> v(first, last);
+
+  typename TestFixture::template view<element, 0> v(first, 0);
 
   EXPECT_EQ(c.data(), v.data());
   EXPECT_EQ(0, v.size());
