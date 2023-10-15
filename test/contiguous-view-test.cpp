@@ -486,5 +486,5 @@ TEST(conversion_tests, static_to_dynamic) {
 
 TEST(conversion_tests, illegal) {
   EXPECT_FALSE((std::is_convertible_v<contiguous_view<element>, contiguous_view<element, 3>>));
-  EXPECT_FALSE((std::is_convertible_v<contiguous_view<element, 2>, contiguous_view<element, 3>>));
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<element, 3>, contiguous_view<element, 2>>));
 }
