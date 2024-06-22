@@ -104,3 +104,10 @@ protected:
   template <typename T, size_t Extent>
   using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
 };
+
+template <typename IsStatic>
+class assert_test : public ::testing::Test {
+protected:
+  template <typename T, size_t Extent>
+  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
+};
