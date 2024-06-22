@@ -456,4 +456,29 @@ TYPED_TEST(assert_test, subview) {
   ASSERT_DEATH_IF_SUPPORTED(v.subview(0, -2), "(c|C)ount");
   ASSERT_DEATH_IF_SUPPORTED(v.subview(0, v.size() + 1), "(c|C)ount");
 }
+
+TEST(assert_test, iterator_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    contiguous_view<element, 2> v [[maybe_unused]] (c.begin(), 3);
+  };
+  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+}
+
+TEST(assert_test, view_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    contiguous_view<element, dynamic_extent> v(c.begin(), 3);
+    contiguous_view<element, 2> v1 [[maybe_unused]] (v);
+  };
+  ASSERT_DEATH_IF_SUPPORTED(l(), ""); // idk normal message for it
+}
+
+TYPED_TEST(assert_test, range_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    typename TestFixture::template view<element, 3> v(c.end(), c.begin());
+  };
+  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+}
 #endif
