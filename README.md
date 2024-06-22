@@ -69,4 +69,4 @@
 
 ### std::string_view
 
-Также нужно поддержать явное преобразование `contiguous_view<const char, ...>` в `std::string_view`
+Для `contiguous_view<const char, ...>` (и только для него) должно быть доступно явное преобразование в `std::string_view`.
