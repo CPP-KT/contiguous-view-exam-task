@@ -1,6 +1,6 @@
 #pragma once
 
-#include "runtime_assert.h"
+#include "runtime-assert.h"
 
 #include <cstddef>
 
