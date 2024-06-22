@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-avoid-magic-numbers"
 #include "contiguous-view.h"
 
 #include "counting-iterator.h"
@@ -440,44 +442,70 @@ TEST(conversion_tests, to_string_view) {
 TYPED_TEST(assert_test, get_by_idx) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
-  ASSERT_DEATH_IF_SUPPORTED(v1[-1], "(i|I)ndex");
-  ASSERT_DEATH_IF_SUPPORTED(v1[v1.size()], "(i|I)ndex");
+  EXPECT_TRUE(check_runtime_assert([&]() { v1[-1]; }, "(i|I)ndex"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v1[v1.size()]; }, "(i|I)ndex"));
   typename TestFixture::template view<element, 0> v2;
-  ASSERT_DEATH_IF_SUPPORTED(v2[0], "(i|I)ndex");
+  EXPECT_TRUE(check_runtime_assert([&]() { v2[0]; }, "(i|I)ndex"));
 }
 
-TYPED_TEST(assert_test, back) {
-  typename TestFixture::template view<element, 0> v;
-  ASSERT_DEATH_IF_SUPPORTED(v.back(), "(b|B)ack");
+TEST(assert_test, back) {
+  contiguous_view<element, dynamic_extent> v;
+  EXPECT_TRUE(check_runtime_assert([&v]() { v.back(); }, "(b|B)ack"));
 }
 
 TYPED_TEST(assert_test, front) {
   typename TestFixture::template view<element, 0> v;
-  ASSERT_DEATH_IF_SUPPORTED(v.front(), "(f|F)ront");
+  EXPECT_TRUE(check_runtime_assert([&]() { v.front(); }, "(f|F)ront"));
+}
+
+TEST(assert_test, last_2) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template last<static_cast<size_t>(-1)>(); }, "(l|L)ast"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template last<4>(); }, "(l|L)ast"));
+}
+
+TEST(assert_test, first_2) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template first<static_cast<size_t>(-1)>(); }, "(f|F)irst"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template first<4>(); }, "(f|F)irst"));
+}
+
+TEST(assert_test, subview_2) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  EXPECT_TRUE(
+      check_runtime_assert([&]() { v.template subview<static_cast<size_t>(-1), dynamic_extent>(); }, "(o|O)ffset")
+  );
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<4, dynamic_extent>(); }, "(o|O)ffset"));
+
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<0, static_cast<size_t>(-2)>(); }, "(c|C)ount"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<0, 4>(); }, "(c|C)ount"));
 }
 
 TYPED_TEST(assert_test, last) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  ASSERT_DEATH_IF_SUPPORTED(v.last(-1), "(l|L)ast");
-  ASSERT_DEATH_IF_SUPPORTED(v.last(v.size() + 1), "(l|L)ast");
+  EXPECT_TRUE(check_runtime_assert([&]() { v.last(-1); }, "(l|L)ast"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.last(v.size() + 1); }, "(l|L)ast"));
 }
 
 TYPED_TEST(assert_test, first) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  ASSERT_DEATH_IF_SUPPORTED(v.first(-1), "(f|F)irst");
-  ASSERT_DEATH_IF_SUPPORTED(v.first(v.size() + 1), "(f|F)irst");
+  EXPECT_TRUE(check_runtime_assert([&]() { v.first(-1); }, "(f|F)irst"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.first(v.size() + 1); }, "(f|F)irst"));
 }
 
 TYPED_TEST(assert_test, subview) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  ASSERT_DEATH_IF_SUPPORTED(v.subview(-1, dynamic_extent), "(o|O)ffset");
-  ASSERT_DEATH_IF_SUPPORTED(v.subview(v.size() + 1, dynamic_extent), "(o|O)ffset");
+  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(-1, dynamic_extent); }, "(o|O)ffset"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(v.size() + 1, dynamic_extent); }, "(o|O)ffset"));
 
-  ASSERT_DEATH_IF_SUPPORTED(v.subview(0, -2), "(c|C)ount");
-  ASSERT_DEATH_IF_SUPPORTED(v.subview(0, v.size() + 1), "(c|C)ount");
+  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(0, -2); }, "(c|C)ount"));
+  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(0, v.size() + 1); }, "(c|C)ount"));
 }
 
 TEST(assert_test, iterator_constructor) {
@@ -485,7 +513,7 @@ TEST(assert_test, iterator_constructor) {
     auto c = make_array(10, 20, 30);
     [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), 3);
   };
-  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
 }
 
 TEST(assert_test, range_constructor_2) {
@@ -493,7 +521,7 @@ TEST(assert_test, range_constructor_2) {
     auto c = make_array(10, 20, 30);
     [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), c.end());
   };
-  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
 }
 
 TEST(assert_test, view_constructor) {
@@ -502,7 +530,7 @@ TEST(assert_test, view_constructor) {
     contiguous_view<element, dynamic_extent> v(c.begin(), 3);
     [[maybe_unused]] contiguous_view<element, 2> v1(v);
   };
-  ASSERT_DEATH_IF_SUPPORTED(l(), ".*"); // idk normal message for it
+  EXPECT_TRUE(check_runtime_assert(l, "(V|v)iew"));
 }
 
 TYPED_TEST(assert_test, range_constructor) {
@@ -510,6 +538,8 @@ TYPED_TEST(assert_test, range_constructor) {
     auto c = make_array(10, 20, 30);
     typename TestFixture::template view<element, 3> v(c.end(), c.begin());
   };
-  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
 }
 #endif
+
+#pragma clang diagnostic pop
