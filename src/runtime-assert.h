@@ -3,8 +3,8 @@
 #include <string>
 #include <utility>
 
-struct AssertionError : std::exception {
-  explicit AssertionError(std::string error);
+struct assertion_error : std::exception {
+  explicit assertion_error(std::string error);
 
   std::string error_;
 };

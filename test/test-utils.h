@@ -103,7 +103,7 @@ template <typename T>
 bool check_runtime_assert(T action, const std::string& error_pattern) {
   try {
     action();
-  } catch (const AssertionError& error) {
+  } catch (const assertion_error& error) {
     return std::regex_match(error.error_, std::regex(".*?" + error_pattern + ".*?"));
   }
   return false;
