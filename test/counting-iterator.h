@@ -26,7 +26,9 @@ public:
 
   counting_iterator() = default;
 
-  explicit counting_iterator(It it, size_t n) : _base(it), _count(n) {}
+  explicit counting_iterator(It it, size_t n)
+      : _base(it)
+      , _count(n) {}
 
   decltype(auto) operator*() const {
     assert(_count > 0);

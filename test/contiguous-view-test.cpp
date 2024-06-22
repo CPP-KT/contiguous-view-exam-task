@@ -15,7 +15,8 @@ namespace {
 
 class element {
 public:
-  element(int value) : value(value) {}
+  element(int value)
+      : value(value) {}
 
   element(const element&) = delete;
   element& operator=(const element&) = delete;
@@ -404,8 +405,8 @@ TYPED_TEST(common_tests, traits) {
   EXPECT_TRUE(std::is_trivially_copyable_v<writable_contiguous_view>);
   EXPECT_TRUE(std::is_trivially_copyable_v<const_contiguous_view>);
 
-  EXPECT_TRUE((std::is_same_v<typename writable_contiguous_view::value_type, element>));
-  EXPECT_TRUE((std::is_same_v<typename const_contiguous_view::value_type, element>));
+  EXPECT_TRUE((std::is_same_v<typename writable_contiguous_view::value_type, element>) );
+  EXPECT_TRUE((std::is_same_v<typename const_contiguous_view::value_type, element>) );
 }
 
 TEST(dynamic_extent_tests, default_ctor) {
@@ -489,6 +490,6 @@ TEST(conversion_tests, static_to_dynamic) {
 }
 
 TEST(conversion_tests, illegal) {
-  EXPECT_FALSE((std::is_convertible_v<contiguous_view<element>, contiguous_view<element, 3>>));
-  EXPECT_FALSE((std::is_constructible_v<contiguous_view<element, 3>, contiguous_view<element, 2>>));
+  EXPECT_FALSE((std::is_convertible_v<contiguous_view<element>, contiguous_view<element, 3>>) );
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<element, 3>, contiguous_view<element, 2>>) );
 }
