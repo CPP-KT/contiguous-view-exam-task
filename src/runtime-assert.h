@@ -1,12 +1,8 @@
 #pragma once
+#include <stdexcept>
 
-#include <string>
-#include <utility>
-
-struct assertion_error : std::exception {
-  explicit assertion_error(std::string error);
-
-  std::string error_;
+struct assertion_error : std::runtime_error {
+  using std::runtime_error::runtime_error;
 };
 
-void runtime_assert(bool condition, std::string message);
+void runtime_assert(bool condition, const std::string& message);

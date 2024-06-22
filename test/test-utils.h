@@ -98,13 +98,3 @@ template <typename T = int, typename U, size_t N>
 void expect_eq(const contiguous_view<U, N>& actual, std::initializer_list<T> expected) {
   expect_eq(actual, contiguous_view<const T>(expected.begin(), expected.end()));
 }
-
-template <typename T>
-bool check_runtime_assert(T action, const std::string& error_pattern) {
-  try {
-    action();
-  } catch (const assertion_error& error) {
-    return std::regex_match(error.error_, std::regex(".*?" + error_pattern + ".*?"));
-  }
-  return false;
-}

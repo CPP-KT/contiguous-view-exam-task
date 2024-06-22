@@ -440,70 +440,92 @@ TEST(conversion_tests, to_string_view) {
 TYPED_TEST(assert_test, get_by_idx) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v1[-1]; }, "(i|I)ndex"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v1[v1.size()]; }, "(i|I)ndex"));
+  EXPECT_THROW(v1[-1], assertion_error);
+  EXPECT_THROW(v1[v1.size()], assertion_error);
   typename TestFixture::template view<element, 0> v2;
-  EXPECT_TRUE(check_runtime_assert([&]() { v2[0]; }, "(i|I)ndex"));
+  EXPECT_THROW(v2[0], assertion_error);
 }
 
 TEST(assert_test, back) {
   contiguous_view<element, dynamic_extent> v;
-  EXPECT_TRUE(check_runtime_assert([&v]() { v.back(); }, "(b|B)ack"));
+  EXPECT_THROW(v.back(), assertion_error);
 }
 
 TYPED_TEST(assert_test, front) {
   typename TestFixture::template view<element, 0> v;
-  EXPECT_TRUE(check_runtime_assert([&]() { v.front(); }, "(f|F)ront"));
+  EXPECT_THROW(v.front(), assertion_error);
 }
 
-TEST(assert_test, last_2) {
+TEST(assert_test, last_dynamic) {
   auto c = make_array(10, 20, 30);
   contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template last<static_cast<size_t>(-1)>(); }, "(l|L)ast"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template last<4>(); }, "(l|L)ast"));
+  EXPECT_THROW(v.last<static_cast<size_t>(-1)>(), assertion_error);
+  EXPECT_THROW(v.last<4>(), assertion_error);
 }
 
-TEST(assert_test, first_2) {
+TEST(assert_test, first_dynamic) {
   auto c = make_array(10, 20, 30);
   contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template first<static_cast<size_t>(-1)>(); }, "(f|F)irst"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template first<4>(); }, "(f|F)irst"));
+  EXPECT_THROW(v.first<static_cast<size_t>(-1)>(), assertion_error);
+  EXPECT_THROW(v.first<4>(), assertion_error);
 }
 
-TEST(assert_test, subview_2) {
+TEST(assert_test, subview_dynamic) {
   auto c = make_array(10, 20, 30);
   contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
-  EXPECT_TRUE(
-      check_runtime_assert([&]() { v.template subview<static_cast<size_t>(-1), dynamic_extent>(); }, "(o|O)ffset")
-  );
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<4, dynamic_extent>(); }, "(o|O)ffset"));
+  auto l = [&]() {
+    v.subview<static_cast<size_t>(-1), dynamic_extent>();
+  };
+  EXPECT_THROW(l(), assertion_error);
+  auto l2 = [&]() {
+    v.subview<4, dynamic_extent>();
+  };
+  EXPECT_THROW(l2(), assertion_error);
 
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<0, static_cast<size_t>(-2)>(); }, "(c|C)ount"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.template subview<0, 4>(); }, "(c|C)ount"));
+  auto l3 = [&]() {
+    v.subview<0, static_cast<size_t>(-2)>();
+  };
+  EXPECT_THROW(l3(), assertion_error);
+  auto l4 = [&]() {
+    v.subview<0, 4>();
+  };
+  EXPECT_THROW(l4(), assertion_error);
 }
 
 TYPED_TEST(assert_test, last) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v.last(-1); }, "(l|L)ast"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.last(v.size() + 1); }, "(l|L)ast"));
+  EXPECT_THROW(v.last(-1), assertion_error);
+  EXPECT_THROW(v.last(v.size() + 1), assertion_error);
 }
 
 TYPED_TEST(assert_test, first) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v.first(-1); }, "(f|F)irst"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.first(v.size() + 1); }, "(f|F)irst"));
+  EXPECT_THROW(v.first(-1), assertion_error);
+  EXPECT_THROW(v.first(v.size() + 1), assertion_error);
 }
 
 TYPED_TEST(assert_test, subview) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(-1, dynamic_extent); }, "(o|O)ffset"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(v.size() + 1, dynamic_extent); }, "(o|O)ffset"));
+  auto l1 = [&]() {
+    v.subview(-1, dynamic_extent);
+  };
+  EXPECT_THROW(l1(), assertion_error);
+  auto l2 = [&]() {
+    v.subview(v.size() + 1, dynamic_extent);
+  };
+  EXPECT_THROW(l2(), assertion_error);
 
-  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(0, -2); }, "(c|C)ount"));
-  EXPECT_TRUE(check_runtime_assert([&]() { v.subview(0, v.size() + 1); }, "(c|C)ount"));
+  auto l3 = [&]() {
+    v.subview(0, -2);
+  };
+  EXPECT_THROW(l3(), assertion_error);
+  auto l4 = [&]() {
+    v.subview(0, v.size() + 1);
+  };
+  EXPECT_THROW(l4(), assertion_error);
 }
 
 TEST(assert_test, iterator_constructor) {
@@ -511,15 +533,15 @@ TEST(assert_test, iterator_constructor) {
     auto c = make_array(10, 20, 30);
     [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), 3);
   };
-  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
+  EXPECT_THROW(l(), assertion_error);
 }
 
-TEST(assert_test, range_constructor_2) {
+TEST(assert_test, range_constructor_static) {
   auto l = []() {
     auto c = make_array(10, 20, 30);
     [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), c.end());
   };
-  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
+  EXPECT_THROW(l(), assertion_error);
 }
 
 TEST(assert_test, view_constructor) {
@@ -528,7 +550,7 @@ TEST(assert_test, view_constructor) {
     contiguous_view<element, dynamic_extent> v(c.begin(), 3);
     [[maybe_unused]] contiguous_view<element, 2> v1(v);
   };
-  EXPECT_TRUE(check_runtime_assert(l, "(V|v)iew"));
+  EXPECT_THROW(l(), assertion_error);
 }
 
 TYPED_TEST(assert_test, range_constructor) {
@@ -536,8 +558,6 @@ TYPED_TEST(assert_test, range_constructor) {
     auto c = make_array(10, 20, 30);
     typename TestFixture::template view<element, 3> v(c.end(), c.begin());
   };
-  EXPECT_TRUE(check_runtime_assert(l, "(r|R)ange"));
+  EXPECT_THROW(l(), assertion_error);
 }
 #endif
-
-#pragma clang diagnostic pop
