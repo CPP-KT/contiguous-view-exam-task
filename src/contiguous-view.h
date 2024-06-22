@@ -1,5 +1,7 @@
 #pragma once
 
+#include "runtime_assert.h"
+
 #include <cstddef>
 
 inline constexpr size_t dynamic_extent = -1;
