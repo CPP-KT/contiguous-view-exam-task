@@ -471,7 +471,7 @@ TEST(assert_test, view_constructor) {
     contiguous_view<element, dynamic_extent> v(c.begin(), 3);
     contiguous_view<element, 2> v1 [[maybe_unused]] (v);
   };
-  ASSERT_DEATH_IF_SUPPORTED(l(), ""); // idk normal message for it
+  ASSERT_DEATH_IF_SUPPORTED(l(), ".*"); // idk normal message for it
 }
 
 TYPED_TEST(assert_test, range_constructor) {
