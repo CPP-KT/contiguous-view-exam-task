@@ -12,6 +12,20 @@
 
 namespace {
 
+template <typename IsStatic>
+class common_tests : public ::testing::Test {
+protected:
+  template <typename T, size_t Extent>
+  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
+};
+
+template <typename IsStatic>
+class assert_test : public ::testing::Test {
+protected:
+  template <typename T, size_t Extent>
+  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
+};
+
 using tested_extents = ::testing::Types<std::false_type, std::true_type>;
 
 class extent_name_generator {
@@ -401,6 +415,7 @@ TEST(conversion_tests, illegal) {
   EXPECT_FALSE((std::is_constructible_v<contiguous_view<element, 3>, contiguous_view<element, 2>>) );
   EXPECT_FALSE((std::is_convertible_v<contiguous_view<const char, dynamic_extent>, std::string_view>) );
   EXPECT_FALSE((std::is_constructible_v<contiguous_view<char, dynamic_extent>, std::string_view>) );
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<const int, dynamic_extent>, std::string_view>) );
   EXPECT_FALSE((std::is_constructible_v<contiguous_view<int, dynamic_extent>, std::string_view>) );
 }
 
@@ -425,10 +440,9 @@ TEST(conversion_tests, to_string_view) {
 TYPED_TEST(assert_test, get_by_idx) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
-  v1[v1.size() - 1];
   ASSERT_DEATH_IF_SUPPORTED(v1[-1], "(i|I)ndex");
   ASSERT_DEATH_IF_SUPPORTED(v1[v1.size()], "(i|I)ndex");
-  contiguous_view<element> v2;
+  typename TestFixture::template view<element, 0> v2;
   ASSERT_DEATH_IF_SUPPORTED(v2[0], "(i|I)ndex");
 }
 
@@ -437,22 +451,31 @@ TYPED_TEST(assert_test, back) {
   ASSERT_DEATH_IF_SUPPORTED(v.back(), "(b|B)ack");
 }
 
+TYPED_TEST(assert_test, front) {
+  typename TestFixture::template view<element, 0> v;
+  ASSERT_DEATH_IF_SUPPORTED(v.front(), "(f|F)ront");
+}
+
 TYPED_TEST(assert_test, last) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  v.last(v.size());
   ASSERT_DEATH_IF_SUPPORTED(v.last(-1), "(l|L)ast");
   ASSERT_DEATH_IF_SUPPORTED(v.last(v.size() + 1), "(l|L)ast");
+}
+
+TYPED_TEST(assert_test, first) {
+  auto c = make_array(10, 20, 30);
+  typename TestFixture::template view<element, 3> v(c.begin(), c.end());
+  ASSERT_DEATH_IF_SUPPORTED(v.first(-1), "(f|F)irst");
+  ASSERT_DEATH_IF_SUPPORTED(v.first(v.size() + 1), "(f|F)irst");
 }
 
 TYPED_TEST(assert_test, subview) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  v.subview(v.size(), dynamic_extent);
   ASSERT_DEATH_IF_SUPPORTED(v.subview(-1, dynamic_extent), "(o|O)ffset");
   ASSERT_DEATH_IF_SUPPORTED(v.subview(v.size() + 1, dynamic_extent), "(o|O)ffset");
 
-  v.subview(0, v.size());
   ASSERT_DEATH_IF_SUPPORTED(v.subview(0, -2), "(c|C)ount");
   ASSERT_DEATH_IF_SUPPORTED(v.subview(0, v.size() + 1), "(c|C)ount");
 }
@@ -460,7 +483,15 @@ TYPED_TEST(assert_test, subview) {
 TEST(assert_test, iterator_constructor) {
   auto l = []() {
     auto c = make_array(10, 20, 30);
-    contiguous_view<element, 2> v [[maybe_unused]] (c.begin(), 3);
+    [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), 3);
+  };
+  ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
+}
+
+TEST(assert_test, range_constructor_2) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), c.end());
   };
   ASSERT_DEATH_IF_SUPPORTED(l(), "(r|R)ange");
 }
@@ -469,7 +500,7 @@ TEST(assert_test, view_constructor) {
   auto l = []() {
     auto c = make_array(10, 20, 30);
     contiguous_view<element, dynamic_extent> v(c.begin(), 3);
-    contiguous_view<element, 2> v1 [[maybe_unused]] (v);
+    [[maybe_unused]] contiguous_view<element, 2> v1(v);
   };
   ASSERT_DEATH_IF_SUPPORTED(l(), ".*"); // idk normal message for it
 }
