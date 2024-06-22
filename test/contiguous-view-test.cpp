@@ -54,15 +54,15 @@ std::ostream& operator<<(std::ostream& out, std::byte b) {
 }
 
 template <typename T, typename U, size_t N, size_t M>
-void expect_eq(const contiguous_view<T, N>& expected, const contiguous_view<U, M>& actual) {
-  EXPECT_EQ(expected.size(), actual.size());
+void expect_eq(const contiguous_view<U, M>& actual, const contiguous_view<T, N>& expected) {
+  EXPECT_EQ(actual.size(), expected.size());
 
   auto expected_begin = expected.begin();
   auto expected_end = expected.end();
   auto actual_begin = actual.begin();
   auto actual_end = actual.end();
 
-  if (std::equal(expected_begin, expected_end, actual_begin, actual_end)) {
+  if (std::equal(actual_begin, actual_end, expected_begin, expected_end)) {
     return;
   }
 
@@ -70,7 +70,7 @@ void expect_eq(const contiguous_view<T, N>& expected, const contiguous_view<U, M
   out << "  expected: {";
 
   bool add_comma = false;
-  std::for_each(expected_begin, expected_end, [&](const auto& e) {
+  std::for_each(expected_begin, expected_end, [&add_comma, &out](const auto& e) {
     if (add_comma) {
       out << ", ";
     }
@@ -81,7 +81,7 @@ void expect_eq(const contiguous_view<T, N>& expected, const contiguous_view<U, M
   out << "}\n  actual:   {";
 
   add_comma = false;
-  std::for_each(actual_begin, actual_end, [&](const auto& e) {
+  std::for_each(actual_begin, actual_end, [&add_comma, &out](const auto& e) {
     if (add_comma) {
       out << ", ";
     }
@@ -95,8 +95,8 @@ void expect_eq(const contiguous_view<T, N>& expected, const contiguous_view<U, M
 }
 
 template <typename T = int, typename U, size_t N>
-void expect_eq(std::initializer_list<T> expected, const contiguous_view<U, N>& actual) {
-  expect_eq(contiguous_view<const T>(expected.begin(), expected.end()), actual);
+void expect_eq(const contiguous_view<U, N>& actual, std::initializer_list<T> expected) {
+  expect_eq(actual, contiguous_view<const T>(expected.begin(), expected.end()));
 }
 
 template <typename IsStatic>
@@ -133,12 +133,12 @@ TYPED_TEST(common_tests, two_iterators_ctor) {
 
   typename TestFixture::template view<element, 3> v(first, last);
 
-  EXPECT_EQ(c.data(), v.data());
-  EXPECT_EQ(3, v.size());
-  EXPECT_EQ(3 * sizeof(element), v.size_bytes());
+  EXPECT_EQ(v.data(), c.data());
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(v.size_bytes(), 3 * sizeof(element));
   EXPECT_FALSE(v.empty());
 
-  expect_eq({10, 20, 30}, v);
+  expect_eq(v, {10, 20, 30});
 }
 
 TYPED_TEST(common_tests, two_iterators_ctor_empty) {
@@ -146,12 +146,12 @@ TYPED_TEST(common_tests, two_iterators_ctor_empty) {
   auto [first, last] = obfuscate_iterators(c.begin(), c.end());
   typename TestFixture::template view<element, 0> v(first, last);
 
-  EXPECT_EQ(c.data(), v.data());
-  EXPECT_EQ(0, v.size());
-  EXPECT_EQ(0, v.size_bytes());
+  EXPECT_EQ(v.data(), c.data());
+  EXPECT_EQ(v.size(), 0);
+  EXPECT_EQ(v.size_bytes(), 0);
   EXPECT_TRUE(v.empty());
 
-  expect_eq({}, v);
+  expect_eq(v, {});
 }
 
 TYPED_TEST(common_tests, iterator_and_count_ctor) {
@@ -160,12 +160,12 @@ TYPED_TEST(common_tests, iterator_and_count_ctor) {
 
   typename TestFixture::template view<element, 3> v(first, last);
 
-  EXPECT_EQ(c.data(), v.data());
-  EXPECT_EQ(3, v.size());
-  EXPECT_EQ(3 * sizeof(element), v.size_bytes());
+  EXPECT_EQ(v.data(), c.data());
+  EXPECT_EQ(v.size(), 3);
+  EXPECT_EQ(v.size_bytes(), 3 * sizeof(element));
   EXPECT_FALSE(v.empty());
 
-  expect_eq({10, 20, 30}, v);
+  expect_eq(v, {10, 20, 30});
 }
 
 TYPED_TEST(common_tests, iterator_and_count_ctor_empty) {
@@ -174,12 +174,12 @@ TYPED_TEST(common_tests, iterator_and_count_ctor_empty) {
 
   typename TestFixture::template view<element, 0> v(first, 0);
 
-  EXPECT_EQ(c.data(), v.data());
-  EXPECT_EQ(0, v.size());
-  EXPECT_EQ(0, v.size_bytes());
+  EXPECT_EQ(v.data(), c.data());
+  EXPECT_EQ(v.size(), 0);
+  EXPECT_EQ(v.size_bytes(), 0);
   EXPECT_TRUE(v.empty());
 
-  expect_eq({}, v);
+  expect_eq(v, {});
 }
 
 TYPED_TEST(common_tests, copy_ctor) {
@@ -191,7 +191,7 @@ TYPED_TEST(common_tests, copy_ctor) {
   EXPECT_EQ(v.data(), copy.data());
   EXPECT_EQ(v.size(), copy.size());
 
-  expect_eq({10, 20, 30}, copy);
+  expect_eq(copy, {10, 20, 30});
 }
 
 TYPED_TEST(common_tests, copy_assignment) {
@@ -206,7 +206,7 @@ TYPED_TEST(common_tests, copy_assignment) {
   EXPECT_EQ(v1.data(), v2.data());
   EXPECT_EQ(v1.size(), v2.size());
 
-  expect_eq({10, 20, 30}, v2);
+  expect_eq(v2, {10, 20, 30});
 }
 
 TYPED_TEST(common_tests, subscript) {
@@ -215,13 +215,13 @@ TYPED_TEST(common_tests, subscript) {
 
   v[1].update_if_non_const(42);
 
-  EXPECT_EQ(10, v[0]);
-  EXPECT_EQ(42, v[1]);
-  EXPECT_EQ(30, v[2]);
+  EXPECT_EQ(v[0], 10);
+  EXPECT_EQ(v[1], 42);
+  EXPECT_EQ(v[2], 30);
 
-  EXPECT_EQ(&c[0], &v[0]);
-  EXPECT_EQ(&c[1], &v[1]);
-  EXPECT_EQ(&c[2], &v[2]);
+  EXPECT_EQ(&v[0], &c[0]);
+  EXPECT_EQ(&v[1], &c[1]);
+  EXPECT_EQ(&v[2], &c[2]);
 }
 
 TYPED_TEST(common_tests, subscript_const) {
@@ -230,47 +230,47 @@ TYPED_TEST(common_tests, subscript_const) {
 
   v[1].update_if_non_const(42);
 
-  EXPECT_EQ(10, v[0]);
-  EXPECT_EQ(20, v[1]);
-  EXPECT_EQ(30, v[2]);
+  EXPECT_EQ(v[0], 10);
+  EXPECT_EQ(v[1], 20);
+  EXPECT_EQ(v[2], 30);
 
-  EXPECT_EQ(&c[0], &v[0]);
-  EXPECT_EQ(&c[1], &v[1]);
-  EXPECT_EQ(&c[2], &v[2]);
+  EXPECT_EQ(&v[0], &c[0]);
+  EXPECT_EQ(&v[1], &c[1]);
+  EXPECT_EQ(&v[2], &c[2]);
 }
 
 TYPED_TEST(common_tests, front_back) {
   auto c = make_array(10, 20, 30);
   const typename TestFixture::template view<element, 3> v(c.begin(), c.end());
 
-  EXPECT_EQ(10, v.front());
-  EXPECT_EQ(30, v.back());
+  EXPECT_EQ(v.front(), 10);
+  EXPECT_EQ(v.back(), 30);
 
-  EXPECT_EQ(&c.front(), &v.front());
-  EXPECT_EQ(&c.back(), &v.back());
+  EXPECT_EQ(&v.front(), &c.front());
+  EXPECT_EQ(&v.back(), &c.back());
 
   v.front().update_if_non_const(42);
   v.back().update_if_non_const(43);
 
-  EXPECT_EQ(42, v.front());
-  EXPECT_EQ(43, v.back());
+  EXPECT_EQ(v.front(), 42);
+  EXPECT_EQ(v.back(), 43);
 }
 
 TYPED_TEST(common_tests, front_back_const) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<const element, 3> v(c.begin(), c.end());
 
-  EXPECT_EQ(10, v.front());
-  EXPECT_EQ(30, v.back());
+  EXPECT_EQ(v.front(), 10);
+  EXPECT_EQ(v.back(), 30);
 
-  EXPECT_EQ(&c.front(), &v.front());
-  EXPECT_EQ(&c.back(), &v.back());
+  EXPECT_EQ(&v.front(), &c.front());
+  EXPECT_EQ(&v.back(), &c.back());
 
   v.front().update_if_non_const(42);
   v.back().update_if_non_const(43);
 
-  EXPECT_EQ(10, v.front());
-  EXPECT_EQ(30, v.back());
+  EXPECT_EQ(v.front(), 10);
+  EXPECT_EQ(v.back(), 30);
 }
 
 TYPED_TEST(common_tests, subview) {
@@ -281,24 +281,24 @@ TYPED_TEST(common_tests, subview) {
     contiguous_view<element, 3> static_slice = v.template subview<2, 3>();
     contiguous_view<element> dynamic_slice = v.subview(2, 3);
 
-    expect_eq({30, 40, 50}, static_slice);
-    expect_eq({30, 40, 50}, dynamic_slice);
+    expect_eq(static_slice, {30, 40, 50});
+    expect_eq(dynamic_slice, {30, 40, 50});
   }
 
   {
     contiguous_view<element, 2> static_slice = v.template subview<1, 2>();
     contiguous_view<element> dynamic_slice = v.subview(1, 2);
 
-    expect_eq({20, 30}, static_slice);
-    expect_eq({20, 30}, dynamic_slice);
+    expect_eq(static_slice, {20, 30});
+    expect_eq(dynamic_slice, {20, 30});
   }
 
   {
     contiguous_view<element, 0> static_slice = v.template subview<5, 0>();
     contiguous_view<element> dynamic_slice = v.subview(5, 0);
 
-    expect_eq({}, static_slice);
-    expect_eq({}, dynamic_slice);
+    expect_eq(static_slice, {});
+    expect_eq(dynamic_slice, {});
   }
 }
 
@@ -310,24 +310,24 @@ TYPED_TEST(common_tests, subview_dynamic_extent) {
     typename TestFixture::template view<element, 5> static_slice = v.template subview<0, dynamic_extent>();
     contiguous_view<element> dynamic_slice = v.subview(0, dynamic_extent);
 
-    expect_eq({10, 20, 30, 40, 50}, static_slice);
-    expect_eq({10, 20, 30, 40, 50}, dynamic_slice);
+    expect_eq(static_slice, {10, 20, 30, 40, 50});
+    expect_eq(dynamic_slice, {10, 20, 30, 40, 50});
   }
 
   {
     typename TestFixture::template view<element, 3> static_slice = v.template subview<2, dynamic_extent>();
     contiguous_view<element> dynamic_slice = v.subview(2, dynamic_extent);
 
-    expect_eq({30, 40, 50}, static_slice);
-    expect_eq({30, 40, 50}, dynamic_slice);
+    expect_eq(static_slice, {30, 40, 50});
+    expect_eq(dynamic_slice, {30, 40, 50});
   }
 
   {
     typename TestFixture::template view<element, 0> static_slice = v.template subview<5, dynamic_extent>();
     contiguous_view<element> dynamic_slice = v.subview(5, dynamic_extent);
 
-    expect_eq({}, static_slice);
-    expect_eq({}, dynamic_slice);
+    expect_eq(static_slice, {});
+    expect_eq(dynamic_slice, {});
   }
 }
 
@@ -338,8 +338,8 @@ TYPED_TEST(common_tests, first) {
   contiguous_view<element, 2> static_slice = v.template first<2>();
   contiguous_view<element> dynamic_slice = v.first(2);
 
-  expect_eq({10, 20}, static_slice);
-  expect_eq({10, 20}, dynamic_slice);
+  expect_eq(static_slice, {10, 20});
+  expect_eq(dynamic_slice, {10, 20});
 }
 
 TYPED_TEST(common_tests, last) {
@@ -349,8 +349,8 @@ TYPED_TEST(common_tests, last) {
   contiguous_view<element, 2> static_slice = v.template last<2>();
   contiguous_view<element> dynamic_slice = v.last(2);
 
-  expect_eq({20, 30}, static_slice);
-  expect_eq({20, 30}, dynamic_slice);
+  expect_eq(static_slice, {20, 30});
+  expect_eq(dynamic_slice, {20, 30});
 }
 
 TYPED_TEST(common_tests, as_bytes) {
@@ -365,16 +365,16 @@ TYPED_TEST(common_tests, as_bytes) {
 
     typename TestFixture::template view<std::byte, 8> as_bytes = std::as_const(ints_view).as_bytes();
 
-    EXPECT_EQ(8, ints_view.size_bytes());
-    EXPECT_EQ(8, as_bytes.size());
-    EXPECT_EQ(8, as_bytes.size_bytes());
+    EXPECT_EQ(ints_view.size_bytes(), 8);
+    EXPECT_EQ(as_bytes.size(), 8);
+    EXPECT_EQ(as_bytes.size_bytes(), 8);
 
-    expect_eq(bytes_view, as_bytes);
+    expect_eq(as_bytes, bytes_view);
 
     as_bytes[3] = std::byte(0x80);
     as_bytes[4] = std::byte(0x42);
 
-    expect_eq<std::uint32_t>({0x80223344, 0xABABCD42}, ints_view);
+    expect_eq<std::uint32_t>(ints_view, {0x80223344, 0xABABCD42});
   }
 }
 
@@ -390,11 +390,11 @@ TYPED_TEST(common_tests, as_bytes_const) {
 
     typename TestFixture::template view<const std::byte, 8> as_bytes = ints_view.as_bytes();
 
-    EXPECT_EQ(8, ints_view.size_bytes());
-    EXPECT_EQ(8, as_bytes.size());
-    EXPECT_EQ(8, as_bytes.size_bytes());
+    EXPECT_EQ(ints_view.size_bytes(), 8);
+    EXPECT_EQ(as_bytes.size(), 8);
+    EXPECT_EQ(as_bytes.size_bytes(), 8);
 
-    expect_eq(bytes_view, as_bytes);
+    expect_eq(as_bytes, bytes_view);
   }
 }
 
@@ -412,12 +412,12 @@ TYPED_TEST(common_tests, traits) {
 TEST(dynamic_extent_tests, default_ctor) {
   contiguous_view<element> v;
 
-  EXPECT_EQ(nullptr, v.data());
-  EXPECT_EQ(0, v.size());
-  EXPECT_EQ(0, v.size_bytes());
+  EXPECT_EQ(v.data(), nullptr);
+  EXPECT_EQ(v.size(), 0);
+  EXPECT_EQ(v.size_bytes(), 0);
   EXPECT_TRUE(v.empty());
 
-  expect_eq({}, v);
+  expect_eq(v, {});
 }
 
 TEST(dynamic_extent_tests, copy_assignment) {
@@ -432,7 +432,7 @@ TEST(dynamic_extent_tests, copy_assignment) {
   EXPECT_EQ(v1.data(), v2.data());
   EXPECT_EQ(v1.size(), v2.size());
 
-  expect_eq({10, 20, 30}, v2);
+  expect_eq(v2, {10, 20, 30});
 }
 
 TEST(static_extent_tests, traits) {
@@ -450,7 +450,7 @@ TEST(conversion_tests, dynamic_add_const) {
   EXPECT_EQ(v.data(), cv.data());
   EXPECT_EQ(v.size(), cv.size());
 
-  expect_eq({10, 20, 30}, cv);
+  expect_eq(cv, {10, 20, 30});
 }
 
 TEST(conversion_tests, static_add_const) {
@@ -462,7 +462,7 @@ TEST(conversion_tests, static_add_const) {
   EXPECT_EQ(v.data(), cv.data());
   EXPECT_EQ(v.size(), cv.size());
 
-  expect_eq({10, 20, 30}, cv);
+  expect_eq(cv, {10, 20, 30});
 }
 
 TEST(conversion_tests, dynamic_to_static) {
@@ -474,7 +474,7 @@ TEST(conversion_tests, dynamic_to_static) {
   EXPECT_EQ(v1.data(), v2.data());
   EXPECT_EQ(v1.size(), v2.size());
 
-  expect_eq({10, 20, 30}, v2);
+  expect_eq(v2, {10, 20, 30});
 }
 
 TEST(conversion_tests, static_to_dynamic) {
@@ -486,7 +486,7 @@ TEST(conversion_tests, static_to_dynamic) {
   EXPECT_EQ(v1.data(), v2.data());
   EXPECT_EQ(v1.size(), v2.size());
 
-  expect_eq({10, 20, 30}, v2);
+  expect_eq(v2, {10, 20, 30});
 }
 
 TEST(conversion_tests, illegal) {
