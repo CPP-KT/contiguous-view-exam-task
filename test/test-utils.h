@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <initializer_list>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 
@@ -36,7 +37,7 @@ private:
 
 template <typename T = element, typename... Ts>
 std::array<T, sizeof...(Ts)> make_array(Ts... values) {
-  return {T(values)...};
+  return std::array<T, sizeof...(Ts)>{T(values)...};
 }
 
 template <typename It>

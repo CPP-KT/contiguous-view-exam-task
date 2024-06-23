@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <bit>
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -440,7 +441,7 @@ TEST(conversion_tests, to_string_view) {
 TYPED_TEST(assert_test, get_by_idx) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
-  EXPECT_THROW(v1[-1], assertion_error);
+  EXPECT_THROW(v1[static_cast<size_t>(-1)], assertion_error);
   EXPECT_THROW(v1[v1.size()], assertion_error);
   typename TestFixture::template view<element, 0> v2;
   EXPECT_THROW(v2[0], assertion_error);
@@ -495,14 +496,14 @@ TEST(assert_test, subview_dynamic) {
 TYPED_TEST(assert_test, last) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  EXPECT_THROW(v.last(-1), assertion_error);
+  EXPECT_THROW(v.last(static_cast<size_t>(-1)), assertion_error);
   EXPECT_THROW(v.last(v.size() + 1), assertion_error);
 }
 
 TYPED_TEST(assert_test, first) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
-  EXPECT_THROW(v.first(-1), assertion_error);
+  EXPECT_THROW(v.first(static_cast<size_t>(-1)), assertion_error);
   EXPECT_THROW(v.first(v.size() + 1), assertion_error);
 }
 
@@ -510,7 +511,7 @@ TYPED_TEST(assert_test, subview) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v(c.begin(), c.end());
   auto l1 = [&]() {
-    v.subview(-1, dynamic_extent);
+    v.subview(static_cast<size_t>(-1), dynamic_extent);
   };
   EXPECT_THROW(l1(), assertion_error);
   auto l2 = [&]() {
@@ -519,7 +520,7 @@ TYPED_TEST(assert_test, subview) {
   EXPECT_THROW(l2(), assertion_error);
 
   auto l3 = [&]() {
-    v.subview(0, -2);
+    v.subview(0, static_cast<size_t>(-2));
   };
   EXPECT_THROW(l3(), assertion_error);
   auto l4 = [&]() {
