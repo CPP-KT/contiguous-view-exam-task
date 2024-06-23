@@ -437,7 +437,6 @@ TEST(conversion_tests, to_string_view) {
   EXPECT_EQ(v1.data(), view2.data());
 }
 
-#ifndef NDEBUG
 TYPED_TEST(assert_test, get_by_idx) {
   auto c = make_array(10, 20, 30);
   typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
@@ -551,7 +550,7 @@ TEST(assert_test, view_constructor) {
     contiguous_view<element, dynamic_extent> v(c.begin(), 3);
     [[maybe_unused]] contiguous_view<element, 2> v1(v);
   };
-  EXPECT_THROW(l(), assertion_error);
+  EXPECT_DEATH_IF_SUPPORTED(l(), "");
 }
 
 TYPED_TEST(assert_test, range_constructor) {
@@ -561,4 +560,3 @@ TYPED_TEST(assert_test, range_constructor) {
   };
   EXPECT_THROW(l(), assertion_error);
 }
-#endif
