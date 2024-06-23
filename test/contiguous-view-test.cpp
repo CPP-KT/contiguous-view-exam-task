@@ -12,6 +12,20 @@
 
 namespace {
 
+template <typename IsStatic>
+class common_tests : public ::testing::Test {
+protected:
+  template <typename T, size_t Extent>
+  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
+};
+
+template <typename IsStatic>
+class assert_test : public ::testing::Test {
+protected:
+  template <typename T, size_t Extent>
+  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
+};
+
 using tested_extents = ::testing::Types<std::false_type, std::true_type>;
 
 class extent_name_generator {
@@ -27,6 +41,7 @@ public:
 };
 
 TYPED_TEST_SUITE(common_tests, tested_extents, extent_name_generator);
+TYPED_TEST_SUITE(assert_test, tested_extents, extent_name_generator);
 
 } // namespace
 
@@ -398,4 +413,151 @@ TEST(conversion_tests, static_to_dynamic) {
 TEST(conversion_tests, illegal) {
   EXPECT_FALSE((std::is_convertible_v<contiguous_view<element>, contiguous_view<element, 3>>) );
   EXPECT_FALSE((std::is_constructible_v<contiguous_view<element, 3>, contiguous_view<element, 2>>) );
+  EXPECT_FALSE((std::is_convertible_v<contiguous_view<const char, dynamic_extent>, std::string_view>) );
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<char, dynamic_extent>, std::string_view>) );
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<const int, dynamic_extent>, std::string_view>) );
+  EXPECT_FALSE((std::is_constructible_v<contiguous_view<int, dynamic_extent>, std::string_view>) );
 }
+
+TEST(conversion_tests, to_string_view) {
+  std::string test("abacaba");
+  contiguous_view<const char, dynamic_extent> v1(test.begin(), test.end());
+  contiguous_view<const char, 7> v2(test.begin(), test.end());
+  std::string_view view(v1);
+  std::string_view view2(v2);
+  EXPECT_EQ(v1.size(), v2.size());
+  EXPECT_EQ(v1.size(), test.size());
+  EXPECT_EQ(v1.size(), view.size());
+  EXPECT_EQ(v1.size(), view2.size());
+
+  EXPECT_EQ(v1.data(), v2.data());
+  EXPECT_EQ(v1.data(), test.data());
+  EXPECT_EQ(v1.data(), view.data());
+  EXPECT_EQ(v1.data(), view2.data());
+}
+
+#ifndef NDEBUG
+TYPED_TEST(assert_test, get_by_idx) {
+  auto c = make_array(10, 20, 30);
+  typename TestFixture::template view<element, 3> v1(c.begin(), c.end());
+  EXPECT_THROW(v1[-1], assertion_error);
+  EXPECT_THROW(v1[v1.size()], assertion_error);
+  typename TestFixture::template view<element, 0> v2;
+  EXPECT_THROW(v2[0], assertion_error);
+}
+
+TEST(assert_test, back) {
+  contiguous_view<element, dynamic_extent> v;
+  EXPECT_THROW(v.back(), assertion_error);
+}
+
+TYPED_TEST(assert_test, front) {
+  typename TestFixture::template view<element, 0> v;
+  EXPECT_THROW(v.front(), assertion_error);
+}
+
+TEST(assert_test, last_dynamic) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  EXPECT_THROW(v.last<static_cast<size_t>(-1)>(), assertion_error);
+  EXPECT_THROW(v.last<4>(), assertion_error);
+}
+
+TEST(assert_test, first_dynamic) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  EXPECT_THROW(v.first<static_cast<size_t>(-1)>(), assertion_error);
+  EXPECT_THROW(v.first<4>(), assertion_error);
+}
+
+TEST(assert_test, subview_dynamic) {
+  auto c = make_array(10, 20, 30);
+  contiguous_view<element, dynamic_extent> v(c.begin(), c.end());
+  auto l = [&]() {
+    v.subview<static_cast<size_t>(-1), dynamic_extent>();
+  };
+  EXPECT_THROW(l(), assertion_error);
+  auto l2 = [&]() {
+    v.subview<4, dynamic_extent>();
+  };
+  EXPECT_THROW(l2(), assertion_error);
+
+  auto l3 = [&]() {
+    v.subview<0, static_cast<size_t>(-2)>();
+  };
+  EXPECT_THROW(l3(), assertion_error);
+  auto l4 = [&]() {
+    v.subview<0, 4>();
+  };
+  EXPECT_THROW(l4(), assertion_error);
+}
+
+TYPED_TEST(assert_test, last) {
+  auto c = make_array(10, 20, 30);
+  typename TestFixture::template view<element, 3> v(c.begin(), c.end());
+  EXPECT_THROW(v.last(-1), assertion_error);
+  EXPECT_THROW(v.last(v.size() + 1), assertion_error);
+}
+
+TYPED_TEST(assert_test, first) {
+  auto c = make_array(10, 20, 30);
+  typename TestFixture::template view<element, 3> v(c.begin(), c.end());
+  EXPECT_THROW(v.first(-1), assertion_error);
+  EXPECT_THROW(v.first(v.size() + 1), assertion_error);
+}
+
+TYPED_TEST(assert_test, subview) {
+  auto c = make_array(10, 20, 30);
+  typename TestFixture::template view<element, 3> v(c.begin(), c.end());
+  auto l1 = [&]() {
+    v.subview(-1, dynamic_extent);
+  };
+  EXPECT_THROW(l1(), assertion_error);
+  auto l2 = [&]() {
+    v.subview(v.size() + 1, dynamic_extent);
+  };
+  EXPECT_THROW(l2(), assertion_error);
+
+  auto l3 = [&]() {
+    v.subview(0, -2);
+  };
+  EXPECT_THROW(l3(), assertion_error);
+  auto l4 = [&]() {
+    v.subview(0, v.size() + 1);
+  };
+  EXPECT_THROW(l4(), assertion_error);
+}
+
+TEST(assert_test, iterator_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), 3);
+  };
+  EXPECT_THROW(l(), assertion_error);
+}
+
+TEST(assert_test, range_constructor_static) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    [[maybe_unused]] contiguous_view<element, 2> v(c.begin(), c.end());
+  };
+  EXPECT_THROW(l(), assertion_error);
+}
+
+TEST(assert_test, view_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    contiguous_view<element, dynamic_extent> v(c.begin(), 3);
+    [[maybe_unused]] contiguous_view<element, 2> v1(v);
+  };
+  EXPECT_THROW(l(), assertion_error);
+}
+
+TYPED_TEST(assert_test, range_constructor) {
+  auto l = []() {
+    auto c = make_array(10, 20, 30);
+    typename TestFixture::template view<element, 3> v(c.end(), c.begin());
+  };
+  EXPECT_THROW(l(), assertion_error);
+}
+#endif

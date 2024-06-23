@@ -97,10 +97,3 @@ template <typename T = int, typename U, size_t N>
 void expect_eq(const contiguous_view<U, N>& actual, std::initializer_list<T> expected) {
   expect_eq(actual, contiguous_view<const T>(expected.begin(), expected.end()));
 }
-
-template <typename IsStatic>
-class common_tests : public ::testing::Test {
-protected:
-  template <typename T, size_t Extent>
-  using view = contiguous_view<T, IsStatic::value ? Extent : dynamic_extent>;
-};
