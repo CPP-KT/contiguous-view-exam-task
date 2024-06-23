@@ -14,6 +14,7 @@ target_include_directories(tests PRIVATE src test)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   target_compile_options(tests PRIVATE /W4 /permissive-)
+  target_compile_options(tests PRIVATE /wd4018)
   if(TREAT_WARNINGS_AS_ERRORS)
     target_compile_options(tests PRIVATE /WX)
   endif()
