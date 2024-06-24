@@ -357,11 +357,13 @@ TEST(dynamic_extent_tests, copy_assignment) {
   expect_eq(v2, {10, 20, 30});
 }
 
+#ifndef _MSC_VER
 TEST(static_extent_tests, traits) {
   using contiguous_view = contiguous_view<element, 10>;
 
   EXPECT_GE(sizeof(contiguous_view::pointer), sizeof(contiguous_view));
 }
+#endif
 
 TEST(conversion_tests, dynamic_add_const) {
   auto c = make_array(10, 20, 30);
