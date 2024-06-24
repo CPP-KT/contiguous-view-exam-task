@@ -453,8 +453,8 @@ TEST(assert_test, back) {
   EXPECT_THROW(v.back(), assertion_error);
 }
 
-TYPED_TEST(assert_test, front) {
-  typename TestFixture::template view<element, 0> v;
+TEST(assert_test, front) {
+  contiguous_view<element, dynamic_extent> v;
   EXPECT_THROW(v.front(), assertion_error);
 }
 
